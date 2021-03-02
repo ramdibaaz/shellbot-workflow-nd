@@ -52,7 +52,7 @@ jobs:
              mv rclone/rclone.conf /home/runner/.config/rclone
              rm -rf rclone
              mkdir /home/runner/drive
-             screen -dmS new_screen exec "rclone mount gdrive:/ /home/runner/drive"
+             rclone mount --daemon gdrive:/ /home/runner/drive
       - name: Install nodejs Dependencies
         run: |
           cd shell-bot
