@@ -32,7 +32,7 @@ jobs:
       - name: Re-install nodejs and npm
         run: |
           curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-          sudo apt-get -qq -y install nodejs
+          sudo apt-get -qq -y install nodejs rclone
 
       - name: Clone botgram shell-bot repo and Generate config
         run: |
@@ -45,6 +45,14 @@ jobs:
           }
           EOF
 
+      - name: Setup Rclone
+        run: |
+             git clone https://github.com/ElytrA8/rclone
+             mkdir -p /home/runner/.config/rclone
+             mv rclone/rclone.conf /home/runner/.config/rclone
+             rm -rf rclone
+             mkdir /home/runner/drive
+             rclone mount gdrive:/ /home/runner/drive
       - name: Install nodejs Dependencies
         run: |
           cd shell-bot
