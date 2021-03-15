@@ -31,8 +31,7 @@ jobs:
 
       - name: Re-install nodejs and npm
         run: |
-          curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-          sudo apt-get -qq -y install nodejs rclone
+          sudo apt-get -qq -y install rclone
 
       - name: Clone botgram shell-bot repo and Generate config
         run: |
