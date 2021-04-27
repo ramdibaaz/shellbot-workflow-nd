@@ -9,6 +9,9 @@ on:
 env:
   GitHubMail: "manofuranium@gmail.com"
   GitHubName: "ElytrA8"
+  # GH_TOKEN >> Github Personal Access Token << In Repository Secrets
+  # authToken >> Telegram Bot Token << In Repository Secrets
+  # ownerID >> Telegram User/Admin owner ID << In Repository Secrets
 
 jobs:
   ubuntu:
@@ -26,26 +29,40 @@ jobs:
           git config --global credential.helper store
           echo "https://${GitHubName}:${{ secrets.GH_TOKEN }}@github.com" > ~/.git-credentials
 
-      # Cleanup The Actions Workspace Using Custom Composite Run Actions
-      - uses: rokibhasansagar/slimhub_actions@main
-
-      - name: Clone The Secret Mirror Repository
+      - name: Re-install nodejs and npm
         run: |
-          git clone https://${GitHubName}:${{ secrets.GH_TOKEN }}@github.com/${{ secrets.SOURCE }} source
+          sudo apt-get -qq -y install rclone
 
-      - name: Compile The Mirroring Docker Container
+      - name: Clone botgram shell-bot repo and Generate config
         run: |
-          cd source || exit 1
-          echo "${{ secrets.GH_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-          docker container prune --force || true
-          docker build . --rm --force-rm --compress --no-cache=true --pull --file Dockerfile -t personal
-          docker image ls
+          git clone https://github.com/botgram/shell-bot --depth 1 shell-bot
+          cd shell-bot
+          cat << EOF > config.json
+          {
+            "authToken": "${{ secrets.authToken }}",
+            "owner": ${{ secrets.ownerID }}
+          }
+          EOF
 
-      - name: running Docker
-        timeout-minutes: 330
+      - name: Setup Rclone
+        run: |
+             git clone https://github.com/ElytrA8/rclone
+             mkdir -p /home/runner/.config/rclone
+             mv rclone/rclone.conf /home/runner/.config/rclone
+             rm -rf rclone
+             mkdir /home/runner/drive
+             rclone mount --daemon gdrive:/ /home/runner/drive
+      - name: Install nodejs Dependencies
+        run: |
+          cd shell-bot
+          npm install
+
+      - name: Run shell-bot server
+        timeout-minutes: 320
         continue-on-error: true
         run: |
-          docker run --privileged --rm -i personal
+          cd shell-bot
+          node server
 
       - name: Workflow Looping
         run: |
